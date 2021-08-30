@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name" translatable="false">EasyScanner</string>
+
+    <string name="toast_permission_rejected">Camera permission was not granted</string>
+    <string name="permission_camera_rationale_goto_settings">We need to access your camera for scanning QR-codes. Please go to settings and allow access.</string>
+
+    <string name="camera_error_0">An unknown error has occurred…</string>
+    <string name="camera_error_1">The camera is disabled according to the device\'s policies and cannot be opened.</string>
+    <string name="camera_error_2">The camera is removable and was disconnected from the Android device, or the camera service interrupted the connection due to a higher priority access request for the camera.</string>
+    <string name="camera_error_3">The camera is currently in an error state. The camera did not open as a result of any interaction unrelated to the user.</string>
+    <string name="camera_error_4">The camera is already in use.</string>
+    <string name="camera_error_5">The system-wide limit on the number of open cameras or camera resources has been reached, and no more cameras can be opened.</string>
+    <string name="camera_error_6">The camera is unavailable due to the Notification Manager policy. Some Android 9 devices cannot access the camera when the device is in Do Not Disturb mode. The camera will not be available until the Do Not Disturb mode is disabled.</string>
+    <string name="permission_camera_rationale">We need to access your camera for scanning QR-codes. Please grant access.</string>
+    <string name="copy">Copy</string>
+    <string name="open">Open</string>
+
+</resources>

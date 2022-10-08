@@ -4,6 +4,7 @@ import android.graphics.ImageFormat
 import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
+import android.util.Patterns
 import android.util.Size
 import androidx.camera.core.ImageProxy
 import kotlin.math.min
@@ -20,6 +21,8 @@ object ImageUtils {
         val pixelSizeBits = ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888)
         val outputBuffer = ByteArray(pixelCount * pixelSizeBits / 8)
         imageToByteBuffer(image, outputBuffer, pixelCount)
+
+        Patterns.EMAIL_ADDRESS
         return outputBuffer
     }
 

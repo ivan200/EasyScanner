@@ -11,7 +11,7 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.FloatRange
-import com.ivan200.easyscanner.ImageUtils
+import kotlin.math.min
 
 /**
  *
@@ -19,26 +19,15 @@ import com.ivan200.easyscanner.ImageUtils
 internal class BoxView : View {
     constructor(context: Context?) : super(context)
     constructor(context: Context?, attributeSet: AttributeSet?) : super(context, attributeSet)
-    constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int)
-        : super(context, attributeSet, defStyleAttr)
+    constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int) :
+        super(context, attributeSet, defStyleAttr)
+
     @Suppress("unused")
-    constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int, defStyleRes: Int)
-        : super(context, attributeSet, defStyleAttr, defStyleRes)
+    constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) :
+        super(context, attributeSet, defStyleAttr, defStyleRes)
 
     init {
         setLayerType(LAYER_TYPE_HARDWARE, null)
-    }
-
-    /**
-     * @property spanSizePercents size of the span between the corners, in percent
-     * @property lineWidth width of lines
-     * @property boxCorners corner radius
-     */
-    companion object {
-        @FloatRange(from = 0.0, to = 100.0)
-        const val spanSizePercents = 60f
-        const val lineWidth = 3f
-        const val boxCorners = 8f
     }
 
     private val backgroundPaint: Paint = Paint().apply {
@@ -65,7 +54,7 @@ internal class BoxView : View {
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        val boxRect = ImageUtils.getBarcodeReticleBox(width, height)
+        val boxRect = getBarcodeReticleBox(width, height)
         // Draws the dark background scrim and leaves the box area clear.
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
         // As the stroke is always centered, so erase twice with FILL and STROKE respectively to clear
@@ -92,11 +81,11 @@ internal class BoxView : View {
         val right: Float = rect.right + shift
         val bottom: Float = rect.bottom + shift
 
-        val span = rect.width() * (spanSizePercents / 100f)   //the size of the gap between the corners, in pixels
+        val span = rect.width() * (spanSizePercents / 100f) // the size of the gap between the corners, in pixels
         val cornerSize = (rect.width() - span) / 2
 
         path = Path().apply {
-            //Top right
+            // Top right
             moveTo(right - cornerSize, top)
             lineTo(right - cornerRadius, top)
             if (cornerRadius > 0) {
@@ -104,7 +93,7 @@ internal class BoxView : View {
             }
             lineTo(right, top + cornerSize)
 
-            //Bottom right
+            // Bottom right
             moveTo(right, bottom - cornerSize)
             lineTo(right, bottom - cornerRadius)
             if (cornerRadius > 0) {
@@ -112,7 +101,7 @@ internal class BoxView : View {
             }
             lineTo(right - cornerSize, bottom)
 
-            //Bottom left
+            // Bottom left
             moveTo(left + cornerSize, bottom)
             lineTo(left + cornerRadius, bottom)
             if (cornerRadius > 0) {
@@ -120,7 +109,7 @@ internal class BoxView : View {
             }
             lineTo(left, bottom - cornerSize)
 
-            //Top left
+            // Top left
             moveTo(left, top + cornerSize)
             lineTo(left, top + cornerRadius)
             if (cornerRadius > 0) {
@@ -130,5 +119,37 @@ internal class BoxView : View {
         }
 
         canvas.drawPath(path, boxPaint)
+    }
+
+    /**
+     * @property spanSizePercents size of the span between the corners, in percent
+     * @property lineWidth width of lines
+     * @property boxCorners corner radius
+     */
+    companion object {
+        @FloatRange(from = 0.0, to = 100.0)
+        const val spanSizePercents = 60f
+        const val lineWidth = 3f
+        const val boxCorners = 8f
+
+        const val reticleBoxSizePercent = 70f
+
+        fun getBarcodeReticleBox(viewWidth: Int, viewHeight: Int): RectF {
+            val overlayWidth = viewWidth.toFloat()
+            val overlayHeight = viewHeight.toFloat()
+
+            val minSize = min(viewWidth, viewHeight).toFloat() // * 70f / 100f
+            val boxWidth = minSize * reticleBoxSizePercent / 100
+            val boxHeight = minSize * reticleBoxSizePercent / 100
+
+            val cx = overlayWidth / 2
+            val cy = overlayHeight / 2
+            return RectF(
+                cx - (boxWidth / 2).toInt(),
+                cy - (boxHeight / 2).toInt(),
+                cx + (boxWidth / 2).toInt(),
+                cy + (boxHeight / 2).toInt()
+            )
+        }
     }
 }

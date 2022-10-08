@@ -30,7 +30,7 @@ internal class PointsView : View {
         strokeCap = Paint.Cap.ROUND
     }
 
-    fun show(barcodes: List<Array<PointF>>) {
+    fun show(barcodes: List<List<PointF>>) {
         this.visibility = VISIBLE
         this.barcodes = barcodes
         invalidate()
@@ -43,7 +43,7 @@ internal class PointsView : View {
         }
     }
 
-    private var barcodes: List<Array<PointF>> = emptyList()
+    private var barcodes: List<List<PointF>> = emptyList()
     private var path = Path()
 
     override fun onDraw(canvas: Canvas) {

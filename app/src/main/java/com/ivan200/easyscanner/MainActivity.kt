@@ -22,6 +22,7 @@ import androidx.camera.core.*
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.Observer
 import com.ivan200.easyscanner.analyzer.QRcodeAnalyzerML
 import com.ivan200.easyscanner.databinding.ActivityMainBinding
@@ -31,7 +32,6 @@ import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -117,8 +117,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         binding.viewFinder.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-            // val ratio = preview?.resolutionInfo?.resolution ?: Size(v.measuredWidth, v.measuredHeight)
-            analyzer?.previewSize = Size(v.measuredWidth, v.measuredHeight)
+            analyzer?.outputTransform = binding.viewFinder.outputTransform
         }
         if (isCameraAvailable()) {
             delegate.requestPermissions()
@@ -171,7 +170,7 @@ class MainActivity : AppCompatActivity() {
             binding.result.visibility = View.VISIBLE
             binding.result.text = getString(errorRes)
         } else {
-            //ExecutionException, InterruptedException, IllegalArgumentException
+            // ExecutionException, InterruptedException, IllegalArgumentException
             ex.printStackTrace()
             binding.result.visibility = View.VISIBLE
             binding.result.text = ex.message
@@ -214,8 +213,9 @@ class MainActivity : AppCompatActivity() {
 
         rebindCamera()
 
-        //add pinch to zoom
-        val scaleGestureDetector = ScaleGestureDetector(this,
+        // add pinch to zoom
+        val scaleGestureDetector = ScaleGestureDetector(
+            this,
             object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
                 override fun onScale(detector: ScaleGestureDetector): Boolean {
                     if (camera != null) {
@@ -224,14 +224,15 @@ class MainActivity : AppCompatActivity() {
                     }
                     return true
                 }
-            })
+            }
+        )
 
-        //add focus on click
+        // add focus on click
         val clickGestureDetector = Function<MotionEvent, Unit> { event ->
-            if (event.pointerCount == 1
-                && event.action == MotionEvent.ACTION_UP
-                && event.eventTime - event.downTime < 200
-                && camera != null
+            if (event.pointerCount == 1 &&
+                event.action == MotionEvent.ACTION_UP &&
+                event.eventTime - event.downTime < 200 &&
+                camera != null
             ) {
                 val point = binding.viewFinder.meteringPointFactory.createPoint(event.x, event.y)
                 val action = FocusMeteringAction.Builder(point).build()
@@ -249,24 +250,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showResult(it: ScanResult) {
-        if (it.error != null) {
-            binding.result.text = it.error.message
-        } else {
-            val s = it.result.joinToString("\n")
-            if (s.isNotEmpty()) {
-                binding.result.visibility = View.VISIBLE
-                binding.result.text = s
-                binding.copy.visibility = View.VISIBLE
-
-                if (Patterns.WEB_URL.matcher(s).matches()) {
-                    binding.open.visibility = View.VISIBLE
-                }
-                pauseFrame()
-            } else {
-                binding.result.visibility = View.INVISIBLE
+        when (it) {
+            is ScanResult.Error -> {
+                binding.result.text = it.error.message
             }
-            if (it.points.isNotEmpty()) {
-                binding.pointsView.show(it.points)
+            is ScanResult.Success -> {
+                val text = it.barcodes.joinToString("\n") { it.text }
+                if (text.isNotEmpty()) {
+                    binding.result.visibility = View.VISIBLE
+                    binding.result.text = text
+                    binding.copy.visibility = View.VISIBLE
+
+                    if (Patterns.WEB_URL.matcher(text).matches()) {
+                        binding.open.visibility = View.VISIBLE
+                    }
+                    pauseFrame()
+                } else {
+                    binding.result.visibility = View.INVISIBLE
+                }
+                if (it.barcodes.isNotEmpty()) {
+                    binding.pointsView.show(it.barcodes.map { it.points })
+                }
             }
         }
     }

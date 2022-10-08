@@ -6,11 +6,21 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.view.*
+import java.util.logging.Level
+import java.util.logging.Logger
 
 /**
  * @author Захаров Иван
  * @since 05.07.2021
  */
+
+//
+//Logger
+//
+inline val <T : Any> T.TAG: String get() = this::class.java.simpleName
+inline val <T : Any> T.logger: Logger get() = Logger.getLogger(this.TAG)
+fun <T : Any> T.log(value: Any) = logger.log(Level.INFO, value.toString())
+
 fun <T : Activity> T.lockOrientation(view: View) {
     val rotation = view.displayCompat.rotation
     val orientation = when (resources.configuration.orientation) {

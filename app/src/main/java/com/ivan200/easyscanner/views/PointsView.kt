@@ -8,16 +8,15 @@ import android.graphics.Path
 import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.View
+import androidx.annotation.AttrRes
+import androidx.annotation.StyleRes
 
-internal class PointsView : View {
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attributeSet: AttributeSet?) : super(context, attributeSet)
-    constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int)
-        : super(context, attributeSet, defStyleAttr)
-
-    @Suppress("unused")
-    constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int, defStyleRes: Int)
-        : super(context, attributeSet, defStyleAttr, defStyleRes)
+class PointsView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    @AttrRes defStyleAttr: Int = 0,
+    @StyleRes defStyleRes: Int = 0
+) : View(context, attrs, defStyleAttr, defStyleRes) {
 
     companion object {
         const val lineWidth = 1f

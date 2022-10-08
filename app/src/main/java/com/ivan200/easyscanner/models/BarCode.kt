@@ -1,13 +1,12 @@
-package com.ivan200.easyscanner
+package com.ivan200.easyscanner.models
 
 import android.graphics.PointF
 import android.graphics.RectF
 
-sealed class ScanResult {
-    class Success(val barcodes: List<BarCode>) : ScanResult()
-    class Error(val error: Throwable) : ScanResult()
-}
-
+/**
+ * @author ivan200
+ * @since 08.10.2022
+ */
 data class BarCode(
     val points: List<PointF>,
     val bounds: RectF,

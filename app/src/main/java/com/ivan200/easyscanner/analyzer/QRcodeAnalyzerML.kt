@@ -20,9 +20,9 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
-import com.ivan200.easyscanner.BarCode
-import com.ivan200.easyscanner.ScanResult
 import com.ivan200.easyscanner.SingleLiveEvent
+import com.ivan200.easyscanner.models.BarCode
+import com.ivan200.easyscanner.models.ScanResult
 import com.ivan200.easyscanner.views.BoxView
 
 /**
@@ -62,7 +62,6 @@ class QRcodeAnalyzerML : ImageAnalysis.Analyzer {
         val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
         pendingTask = scanner.process(image)
             .addOnSuccessListener { barcodes ->
-
                 val codes = mutableListOf<BarCode>()
                 for (barcode in barcodes) {
                     val box = barcode.boundingBox?.toRectF()?.transform(transform)
@@ -91,6 +90,8 @@ class QRcodeAnalyzerML : ImageAnalysis.Analyzer {
     }
 
     /**
+     * get transfomation to map imageproxy coordinates to preview coordiates
+     *
      * https://developer.android.com/reference/androidx/camera/view/transform/CoordinateTransform
      */
     @TransformExperimental
@@ -107,24 +108,11 @@ class QRcodeAnalyzerML : ImageAnalysis.Analyzer {
         return outputTransform?.let { CoordinateTransform(source, it) }
     }
 
-    private fun getFullRect(imageProxy: ImageProxy): Rect =
-        if (imageProxy.imageInfo.rotationDegrees.let { it == 90 || it == 270 }) {
-            Rect(0, 0, imageProxy.height, imageProxy.width)
-        } else {
-            Rect(0, 0, imageProxy.width, imageProxy.height)
-        }
-
     @TransformExperimental
-    fun RectF.transform(transform: CoordinateTransform?): RectF {
-        val rect = RectF(this)
-        transform?.mapRect(rect)
-        return rect
-    }
+    fun RectF.transform(transform: CoordinateTransform?): RectF = RectF(this).also { transform?.mapRect(it) }
 
     @TransformExperimental
     fun Array<Point>.transform(transform: CoordinateTransform?): List<PointF> = map {
-        it.toPointF().apply {
-            transform?.mapPoint(this)
-        }
+        it.toPointF().apply { transform?.mapPoint(this) }
     }
 }

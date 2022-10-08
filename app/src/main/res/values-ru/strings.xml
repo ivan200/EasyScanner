@@ -1,7 +1,8 @@
 <resources>
 
     <string name="toast_permission_rejected">Camera permission was not granted</string>
-    <string name="permission_camera_rationale">Для сканирования QR-кодов требуется камера. Пожалуйста, разрешите доступ.</string>
+
+    <string name="permission_camera_goto_settings_title">Разрешите доступ к камере.</string>
     <string name="permission_camera_rationale_goto_settings">Для сканирования QR-кодов требуется камера. Пожалуйста, перейдите в настройки и разрешите доступ.</string>
 
     <string name="camera_error_0">Произошла неизвестная ошибка…</string>

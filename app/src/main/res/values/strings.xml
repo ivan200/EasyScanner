@@ -2,6 +2,7 @@
     <string name="app_name" translatable="false">EasyScanner</string>
 
     <string name="toast_permission_rejected">Camera permission was not granted</string>
+    <string name="permission_camera_goto_settings_title">Allow access to the camera.</string>
     <string name="permission_camera_rationale_goto_settings">We need to access your camera for scanning QR-codes. Please go to settings and allow access.</string>
 
     <string name="camera_error_0">An unknown error has occurred…</string>

@@ -10,21 +10,21 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.Animation
+import androidx.annotation.AttrRes
 import androidx.annotation.FloatRange
+import androidx.annotation.StyleRes
 import kotlin.math.min
 
 /**
  *
  */
-internal class BoxView : View {
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attributeSet: AttributeSet?) : super(context, attributeSet)
-    constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int) :
-        super(context, attributeSet, defStyleAttr)
-
-    @Suppress("unused")
-    constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) :
-        super(context, attributeSet, defStyleAttr, defStyleRes)
+class BoxView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    @AttrRes defStyleAttr: Int = 0,
+    @StyleRes defStyleRes: Int = 0
+) : View(context, attrs, defStyleAttr, defStyleRes) {
 
     init {
         setLayerType(LAYER_TYPE_HARDWARE, null)

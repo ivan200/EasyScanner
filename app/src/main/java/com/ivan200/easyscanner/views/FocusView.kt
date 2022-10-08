@@ -7,53 +7,53 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.Animation
-import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationSet
 import android.view.animation.ScaleAnimation
 import android.view.animation.TranslateAnimation
+import android.view.animation.TranslateAnimation.ABSOLUTE
+import androidx.annotation.AttrRes
+import androidx.annotation.StyleRes
 
-class FocusView : View {
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attributeSet: AttributeSet?) : super(context, attributeSet)
-    constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int)
-        : super(context, attributeSet, defStyleAttr)
-    @Suppress("unused")
-    constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int, defStyleRes: Int)
-        : super(context, attributeSet, defStyleAttr, defStyleRes)
+/**
+ * @author ivan200
+ * @since 31.02.2021
+ */
+class FocusView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    @AttrRes defStyleAttr: Int = 0,
+    @StyleRes defStyleRes: Int = 0
+) : View(context, attrs, defStyleAttr, defStyleRes), Animation.AnimationListener {
 
     private var animated = false
-    private var paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE
-        style = Paint.Style.STROKE
-        strokeWidth = strokeWidth
+    private var paint = Paint(Paint.ANTI_ALIAS_FLAG).also {
+        it.color = Color.WHITE
+        it.style = Paint.Style.STROKE
+        it.strokeWidth = DEFAULT_STROKE_WIDTH
     }
-    private val strokeWidth = 3.0f
     private var animation: AnimationSet? = null
     private var fromX = 0f
     private var fromY = 0f
     private var toX = 1.0f
     private var toY = 1.0f
-    private val animationDuration = 300L
 
     fun anim(xValue: Float, yValue: Float) {
         this.visibility = VISIBLE
         animated = true
         clearAnimation()
-        if (animation != null) {
-            animation!!.setAnimationListener(null)
-            animation = null
-        }
+        animation?.setAnimationListener(null)
+        animation = null
         invalidate()
         val scaleAnimation = ScaleAnimation(fromX, toX, fromY, toY).apply {
-            duration = animationDuration
+            duration = DEFAULT_ANIMATION_DURATION
         }
         val translateAnimation = TranslateAnimation(
-            TranslateAnimation.ABSOLUTE, xValue - width * fromX / 2,
-            TranslateAnimation.ABSOLUTE, xValue - width * toX / 2,
-            TranslateAnimation.ABSOLUTE, yValue - height * fromY / 2,
-            TranslateAnimation.ABSOLUTE, yValue - height * toY / 2
+            ABSOLUTE, xValue - width * fromX / 2,
+            ABSOLUTE, xValue - width * toX / 2,
+            ABSOLUTE, yValue - height * fromY / 2,
+            ABSOLUTE, yValue - height * toY / 2
         ).apply {
-            duration = animationDuration
+            duration = DEFAULT_ANIMATION_DURATION
         }
 
         animation = AnimationSet(false).apply {
@@ -63,14 +63,7 @@ class FocusView : View {
             fillAfter = true
             isFillEnabled = true
             fillBefore = true
-            setAnimationListener(object : AnimationListener {
-                override fun onAnimationEnd(animation: Animation) {
-                    animated = false
-                }
-
-                override fun onAnimationRepeat(animation: Animation) {}
-                override fun onAnimationStart(animation: Animation) {}
-            })
+            setAnimationListener(this@FocusView)
         }
         startAnimation(animation)
     }
@@ -86,9 +79,26 @@ class FocusView : View {
             canvas.drawCircle(
                 (width / 2).toFloat(),
                 (height / 2).toFloat(),
-                width.toFloat() / 2.0f - strokeWidth / 2.0f - 1,
+                width.toFloat() / 2.0f - paint.strokeWidth / 2.0f - 1,
                 paint
             )
         }
+    }
+
+    override fun onAnimationEnd(animation: Animation?) {
+        animated = false
+    }
+
+    override fun onAnimationStart(animation: Animation?) {
+        // not used
+    }
+
+    override fun onAnimationRepeat(animation: Animation?) {
+        // not used
+    }
+
+    private companion object {
+        const val DEFAULT_ANIMATION_DURATION = 300L
+        const val DEFAULT_STROKE_WIDTH = 3.0f
     }
 }

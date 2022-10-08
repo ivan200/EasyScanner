@@ -1,6 +1,5 @@
 package com.ivan200.easyscanner
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -22,12 +21,14 @@ import androidx.camera.core.*
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.Observer
 import com.ivan200.easyscanner.analyzer.QRcodeAnalyzerML
 import com.ivan200.easyscanner.databinding.ActivityMainBinding
-import com.ivan200.easyscanner.permission.PermissionData
+import com.ivan200.easyscanner.models.ScanResult
 import com.ivan200.easyscanner.permission.PermissionsDelegate
+import com.ivan200.easyscanner.permission.PermissionsDelegateCamera
+import com.ivan200.easyscanner.permission.ResultType
+import kotlinx.coroutines.NonCancellable.cancel
 import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.max
@@ -52,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
     private var resetOnResume = false
 
-    private lateinit var delegate: PermissionsDelegate
+    private lateinit var permissionsDelegate: PermissionsDelegate
 
     private val displayManager by lazy { getSystemService(Context.DISPLAY_SERVICE) as DisplayManager }
     private val displayListener = object : DisplayManager.DisplayListener {
@@ -96,31 +97,29 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val cameraPermission = PermissionData(
-            Manifest.permission.CAMERA,
-            R.string.permission_camera_rationale,
-            R.string.permission_camera_rationale_goto_settings
-        )
-        delegate = PermissionsDelegate(
+        permissionsDelegate = PermissionsDelegateCamera(
             activity = this,
             savedInstanceState = savedInstanceState,
-            allPermissions = arrayListOf(cameraPermission),
-            onPermissionGranted = {
-                binding.viewFinder.post {
-                    displayManager.registerDisplayListener(displayListener, null)
-                    initCamera()
+            {
+                when (it) {
+                    is ResultType.Denied -> {
+                        Toast.makeText(this, getString(R.string.toast_permission_rejected), Toast.LENGTH_SHORT).show()
+                    }
+                    ResultType.Allow.AlreadyHas -> {
+                        initCamera()
+                    }
+                    is ResultType.Allow -> {
+                        binding.viewFinder.post {
+                            displayManager.registerDisplayListener(displayListener, null)
+                            initCamera()
+                        }
+                    }
                 }
-            },
-            onPermissionRejected = {
-                Toast.makeText(this, getString(R.string.toast_permission_rejected), Toast.LENGTH_SHORT).show()
             }
         )
 
         binding.viewFinder.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
             analyzer?.outputTransform = binding.viewFinder.outputTransform
-        }
-        if (isCameraAvailable()) {
-            delegate.requestPermissions()
         }
     }
 
@@ -322,6 +321,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        if (isCameraAvailable()) {
+            permissionsDelegate.queryPermissionsOnStart()
+        }
         lockOrientation(binding.viewFinder)
         hideSystemUI()
     }
@@ -360,7 +362,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        delegate.saveInstanceState(outState)
+        permissionsDelegate.saveInstanceState(outState)
         super.onSaveInstanceState(outState)
     }
 

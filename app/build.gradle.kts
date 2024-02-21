@@ -1,42 +1,47 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
+    alias(libs.plugins.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
-    compileSdk = 33
+    namespace = ("com.ivan200.easyscanner")
+    compileSdk = libs.versions.compileSdkVersion.get().toInt()
 
     defaultConfig {
         applicationId = "com.ivan200.easyscanner"
-        minSdk = 21
-        targetSdk = 33
+        minSdk = libs.versions.minSdkVersion.get().toInt()
+        targetSdk = libs.versions.targetSdkVersion.get().toInt()
         versionCode = 1
         versionName = "1.0"
     }
     buildFeatures {
         viewBinding = true
     }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 }
 
 dependencies {
     // Kotlin
-    implementation("androidx.core:core-ktx:1.9.0")
+    implementation(libs.core.ktx)
 
     // App compat and UI things
-    implementation("androidx.appcompat:appcompat:1.5.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation(libs.appcompat)
+    implementation(libs.coordinatorlayout)
+    implementation(libs.material)
+    implementation(libs.livedata.core)
 
     // CameraX
-    implementation("androidx.camera:camera-camera2:1.1.0")
-    implementation("androidx.camera:camera-view:1.1.0")
-    implementation("androidx.camera:camera-lifecycle:1.1.0")
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.view)
+    implementation(libs.camera.lifecycle)
 
     // MLKit
-    implementation ("com.google.mlkit:barcode-scanning:17.0.2")
-
-    // ViewModel
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.5.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
+    implementation(libs.barcode.scanning)
 }

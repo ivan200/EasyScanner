@@ -16,5 +16,6 @@
     <string name="retry">Retry</string>
     <string name="copy">Copy</string>
     <string name="open">Open</string>
+    <string name="copied">Copied</string>
 
 </resources>

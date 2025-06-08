@@ -15,6 +15,7 @@
     <string name="retry">Повторить</string>
     <string name="copy">Копировать</string>
     <string name="open">Открыть</string>
+    <string name="copied">Скопировано</string>
 
 
 </resources>

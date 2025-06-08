@@ -79,8 +79,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(view)
         resetUi()
         binding.copy.setOnClickListener {
-            (getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
-                ?.setPrimaryClip(ClipData.newPlainText(binding.result.text, binding.result.text))
+            android.R.string.copy
+            runCatching {
+                getSystemService(ClipboardManager::class.java)!!
+                    .setPrimaryClip(ClipData.newPlainText(binding.result.text, binding.result.text))
+            }.onSuccess {
+                Toast.makeText(this, getString(R.string.copied), Toast.LENGTH_SHORT).show()
+            }
             resetUi()
         }
         binding.retry.setOnClickListener {

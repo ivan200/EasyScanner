@@ -1,7 +1,6 @@
 package com.ivan200.easyscanner.permission
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -13,11 +12,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
 import com.ivan200.easyscanner.R
-import android.Manifest
-import com.ivan200.easyscanner.log
 
 /**
  * Delegate class for checking and requesting permissions
@@ -67,8 +63,7 @@ abstract class PermissionsDelegate(
     }
 
     init {
-        @Suppress("UNCHECKED_CAST")
-        savedInstanceState?.apply {
+        @Suppress("UNCHECKED_CAST") savedInstanceState?.apply {
             getBoolean(KEY_NEED_TO_SHOW_DIALOG, true).let { needToShowDialog = it }
             getStringArray(KEY_PERMISSIONS).let { permissions = it ?: emptyArray() }
         }
@@ -81,11 +76,6 @@ abstract class PermissionsDelegate(
         }
     }
 
-    private fun getRationale(): Boolean = missingPermissions.let {
-        it.isNotEmpty() && it.any { ActivityCompat.shouldShowRequestPermissionRationale(activity, it) }
-    }
-
-
     fun queryPermissionsOnStart() {
         updatePermissionResults()
         if (hasAllPermissions) {
@@ -97,8 +87,8 @@ abstract class PermissionsDelegate(
     }
 
 
-    abstract fun getDialogTitieForMissedPermission(blockedPermission: String) : String
-    abstract fun getDialogMessageForMissedPermission(blockedPermission: String) : String
+    abstract fun getDialogTitieForMissedPermission(blockedPermission: String): String
+    abstract fun getDialogMessageForMissedPermission(blockedPermission: String): String
 
     /**
      * Show dialog on permission rejected
@@ -110,24 +100,17 @@ abstract class PermissionsDelegate(
         val titleId = getDialogTitieForMissedPermission(blockedPermission)
         val messageId = getDialogMessageForMissedPermission(blockedPermission)
 
-        val dialog = AlertDialog.Builder(activity, dialogTheme)
-            .setTitle(titleId)
-            .setIconAttribute(android.R.attr.alertDialogIcon)
-            .setMessage(messageId)
-            .setPositiveButton(android.R.string.ok) { dialog, _ ->
+        val dialog = AlertDialog.Builder(activity, dialogTheme).setTitle(titleId).setIconAttribute(android.R.attr.alertDialogIcon)
+            .setMessage(messageId).setPositiveButton(android.R.string.ok) { dialog, _ ->
                 dialog.dismiss()
                 gotoPhonePermissionSettings(resultLauncher, activity)
-            }
-            .setNegativeButton(android.R.string.cancel) { dialog, _ ->
+            }.setNegativeButton(android.R.string.cancel) { dialog, _ ->
                 onPermissionResult.invoke(ResultType.Denied.CustomDialogNo)
                 dialog.dismiss()
-            }
-            .setOnCancelListener { dialog ->
+            }.setOnCancelListener { dialog ->
                 onPermissionResult.invoke(ResultType.Denied.CustomDialogCancelled)
                 dialog.dismiss()
-            }
-            .create()
-            .apply {
+            }.create().apply {
                 setOnCancelListener { d ->
                     onPermissionResult.invoke(ResultType.Denied.CustomDialogCancelled)
                     d.dismiss()
@@ -154,15 +137,11 @@ abstract class PermissionsDelegate(
     }
 
     private fun gotoPhonePermissionSettings(launcher: ActivityResultLauncher<Intent>, activity: Activity) {
-        val intent = Intent()
-            .setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            .apply {
+        val intent = Intent().setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     putExtra(Intent.EXTRA_PACKAGE_NAME, activity.packageName)
                 }
-            }
-            .setData(Uri.fromParts("package", activity.packageName, null))
-            .addCategory(Intent.CATEGORY_DEFAULT)
+            }.setData(Uri.fromParts("package", activity.packageName, null)).addCategory(Intent.CATEGORY_DEFAULT)
             .addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
         try {
             launcher.launch(intent)

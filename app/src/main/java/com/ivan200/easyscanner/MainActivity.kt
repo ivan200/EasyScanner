@@ -19,7 +19,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.arch.core.util.Function
 import androidx.camera.core.*
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import com.ivan200.easyscanner.analyzer.QRcodeAnalyzerML
@@ -28,7 +31,6 @@ import com.ivan200.easyscanner.models.ScanResult
 import com.ivan200.easyscanner.permission.PermissionsDelegate
 import com.ivan200.easyscanner.permission.PermissionsDelegateCamera
 import com.ivan200.easyscanner.permission.ResultType
-import kotlinx.coroutines.NonCancellable.cancel
 import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.max
@@ -81,12 +83,15 @@ class MainActivity : AppCompatActivity() {
             resetUi()
             rebindCamera()
         }
+        binding.retry.setOnClickListener {
+            resetUi()
+            rebindCamera()
+        }
         binding.open.setOnClickListener {
             var url = binding.result.text.toString()
-            if (!arrayOf("https://", "http://", "rtsp://").any { url.lowercase().startsWith(it) }) {
+            if(!"(?i:http|https|rtsp|ftp)://.*".toRegex().matches(url)){
                 url = "https://$url"
             }
-
             try {
                 val i = Intent(Intent.ACTION_VIEW)
                 i.data = Uri.parse(url)
@@ -118,7 +123,7 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-        binding.viewFinder.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+        binding.viewFinder.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             analyzer?.outputTransform = binding.viewFinder.outputTransform
         }
     }
@@ -176,11 +181,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun aspectRatioSelector(@AspectRatio.Ratio aspectRatio: Int): ResolutionSelector {
+        return ResolutionSelector.Builder().setAspectRatioStrategy(
+            AspectRatioStrategy(aspectRatio, AspectRatioStrategy.FALLBACK_RULE_AUTO)
+        ).build()
+    }
+
     private fun onCameraProviderInitialized() {
         cameraSelector = when {
             hasBackCamera() -> CameraSelector.DEFAULT_BACK_CAMERA
             hasFrontCamera() -> CameraSelector.DEFAULT_FRONT_CAMERA
-            else -> throw IllegalStateException("Back and front camera are unavailable")
+            else -> error("Back and front camera are unavailable")
         }
 
         val previewSize = getPreviewSize()
@@ -188,7 +199,7 @@ class MainActivity : AppCompatActivity() {
         val rotation = binding.viewFinder.displayCompat.rotation
 
         preview = Preview.Builder().apply {
-            setTargetAspectRatio(screenAspectRatio)
+            setResolutionSelector(aspectRatioSelector(screenAspectRatio))
             setTargetRotation(rotation)
         }.build().apply {
             // Attach the viewfinder's surface provider to preview use case
@@ -198,7 +209,7 @@ class MainActivity : AppCompatActivity() {
         analyzer = QRcodeAnalyzerML()
         analysis = ImageAnalysis.Builder().apply {
             setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
-            setTargetAspectRatio(screenAspectRatio)
+            setResolutionSelector(aspectRatioSelector(screenAspectRatio))
             setTargetRotation(rotation)
         }.build().apply {
             setAnalyzer(cameraExecutor, analyzer!!)
@@ -206,7 +217,7 @@ class MainActivity : AppCompatActivity() {
 
         imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            .setTargetAspectRatio(screenAspectRatio)
+            .setResolutionSelector(aspectRatioSelector(screenAspectRatio))
             .setTargetRotation(rotation)
             .build()
 
@@ -246,6 +257,11 @@ class MainActivity : AppCompatActivity() {
             scaleGestureDetector.onTouchEvent(event)
             return@setOnTouchListener true
         }
+        binding.viewFinder.previewStreamState.observe(this) {
+            if (it == PreviewView.StreamState.STREAMING) {
+                analyzer?.outputTransform = binding.viewFinder.outputTransform
+            }
+        }
     }
 
     private fun showResult(it: ScanResult) {
@@ -258,10 +274,12 @@ class MainActivity : AppCompatActivity() {
                 if (text.isNotEmpty()) {
                     binding.result.visibility = View.VISIBLE
                     binding.result.text = text
-                    binding.copy.visibility = View.VISIBLE
 
+                    binding.buttons.visibility = View.VISIBLE
                     if (Patterns.WEB_URL.matcher(text).matches()) {
                         binding.open.visibility = View.VISIBLE
+                    } else{
+                        binding.open.visibility = View.GONE
                     }
                     pauseFrame()
                 } else {
@@ -298,8 +316,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun resetUi() {
         binding.result.text = null
-        binding.copy.visibility = View.INVISIBLE
-        binding.open.visibility = View.GONE
+        binding.buttons.visibility = View.GONE
         binding.result.visibility = View.INVISIBLE
         binding.pointsView.hide()
     }
@@ -353,6 +370,7 @@ class MainActivity : AppCompatActivity() {
      *  @param height - preview height
      *  @return suitable aspect ratio
      */
+    @AspectRatio.Ratio
     private fun aspectRatio(width: Int, height: Int): Int {
         val previewRatio = max(width, height).toDouble() / min(width, height)
         if (abs(previewRatio - RATIO_4_3_VALUE) <= abs(previewRatio - RATIO_16_9_VALUE)) {

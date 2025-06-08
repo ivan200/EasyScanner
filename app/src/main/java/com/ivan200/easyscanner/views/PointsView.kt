@@ -51,21 +51,25 @@ class PointsView @JvmOverloads constructor(
         if (barcodes.isNotEmpty()) {
             path.reset()
             for (barcodePoints in barcodes) {
-                if (barcodePoints.size > 1) {
-                    for ((index, point) in barcodePoints.withIndex()) {
-                        if (index == 0) {
-                            path.moveTo(point.x, point.y)
-                        } else {
-                            path.lineTo(point.x, point.y)
-                            if (index == barcodePoints.size - 1) {
-                                val first = barcodePoints[0]
-                                path.lineTo(first.x, first.y)
-                            }
-                        }
+                drawBarcode(path,barcodePoints)
+            }
+            canvas.drawPath(path, linePaint)
+        }
+    }
+
+    private fun drawBarcode(path: Path,barcodePoints: List<PointF>){
+        if (barcodePoints.size > 1) {
+            for ((index, point) in barcodePoints.withIndex()) {
+                if (index == 0) {
+                    path.moveTo(point.x, point.y)
+                } else {
+                    path.lineTo(point.x, point.y)
+                    if (index == barcodePoints.size - 1) {
+                        val first = barcodePoints[0]
+                        path.lineTo(first.x, first.y)
                     }
                 }
             }
-            canvas.drawPath(path, linePaint)
         }
     }
 }

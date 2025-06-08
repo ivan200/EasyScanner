@@ -33,7 +33,6 @@ dependencies {
 
     // App compat and UI things
     implementation(libs.appcompat)
-    implementation(libs.coordinatorlayout)
     implementation(libs.material)
     implementation(libs.livedata.core)
 

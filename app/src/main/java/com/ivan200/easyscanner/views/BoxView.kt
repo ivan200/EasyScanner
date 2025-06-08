@@ -10,7 +10,6 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.Animation
 import androidx.annotation.AttrRes
 import androidx.annotation.FloatRange
 import androidx.annotation.StyleRes
@@ -31,9 +30,7 @@ class BoxView @JvmOverloads constructor(
     }
 
     private val backgroundPaint: Paint = Paint().apply {
-        color =
-
-            Color.parseColor("#55000000")
+        color = Color.parseColor("#55000000")
     }
 
     private val boxPaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -44,7 +41,6 @@ class BoxView @JvmOverloads constructor(
     }
 
     private val transparentPaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        strokeWidth = boxPaint.strokeWidth
         xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
     }
 
@@ -62,8 +58,7 @@ class BoxView @JvmOverloads constructor(
         transparentPaint.style = Paint.Style.FILL_AND_STROKE
         canvas.drawRoundRect(boxRect, boxCornerRadius, boxCornerRadius, transparentPaint)
 
-        val lineShift = boxPaint.strokeWidth / 2f
-        drawCornersPath(canvas, boxRect, boxCornerRadius, lineShift)
+        drawCornersPath(canvas, boxRect, boxCornerRadius, 0f)
     }
 
     private fun drawCornersPath(
@@ -130,7 +125,7 @@ class BoxView @JvmOverloads constructor(
         @FloatRange(from = 0.0, to = 100.0)
         const val spanSizePercents = 60f
         const val lineWidth = 3f
-        const val boxCorners = 8f
+        const val boxCorners = 32f
 
         const val reticleBoxSizePercent = 70f
 

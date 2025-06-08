@@ -1,20 +1,18 @@
 [versions]
 minSdkVersion = "21"
-targetSdkVersion = "34"
-compileSdkVersion = "34"
-buildToolsVersion = "34.0.0"
+targetSdkVersion = "36"
+compileSdkVersion = "36"
+buildToolsVersion = "36.0.0"
 
-agp = "8.2.2"
+agp = "8.10.1"
 kotlin-android = "1.9.10"
 
-appcompat = "1.6.1"
-core-ktx = "1.12.0"
-livedata-core = "2.7.0"
-material = "1.11.0"
-coordinatorlayout = "1.2.0"
-androidx-camera = "1.3.1"
-barcode-scanning = "17.2.0"
-
+appcompat = "1.7.1"
+core-ktx = "1.16.0"
+livedata-core = "2.9.1"
+material = "1.12.0"
+androidx-camera = "1.4.2"
+barcode-scanning = "17.3.0"
 
 [libraries]
 # https://mvnrepository.com/artifact/androidx.appcompat/appcompat
@@ -24,14 +22,12 @@ appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "a
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
 
 #LiveData
+# https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-livedata-core
 livedata-core = { group = "androidx.lifecycle", name = "lifecycle-livedata-core", version.ref = "livedata-core" }
 
 # Material 3
 # https://mvnrepository.com/artifact/com.google.android.material/material
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-
-# https://mvnrepository.com/artifact/androidx.constraintlayout/constraintlayout
-coordinatorlayout = { group = "androidx.coordinatorlayout", name = "coordinatorlayout", version.ref = "coordinatorlayout" }
 
 # CameraX (camera implementation for camera2)
 # https://developer.android.com/jetpack/androidx/releases/camera
@@ -40,14 +36,13 @@ camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "
 camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "androidx-camera" }
 
 # MLKit
+# https://mvnrepository.com/artifact/com.google.mlkit/barcode-scanning
 barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "barcode-scanning" }
 
 [plugins]
 application = { id = "com.android.application", version.ref = "agp" }
-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin-android" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin-android" }
-kotlin-plugin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin-android" }
 
 [bundles]
 

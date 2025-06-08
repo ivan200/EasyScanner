@@ -37,7 +37,9 @@ class QRcodeAnalyzerML : ImageAnalysis.Analyzer {
 
     private val scanner: BarcodeScanner by lazy {
         val options = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .setBarcodeFormats(
+                Barcode.FORMAT_ALL_FORMATS
+            )
             .build()
         BarcodeScanning.getClient(options)
     }

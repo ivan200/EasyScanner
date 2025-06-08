@@ -13,6 +13,7 @@
     <string name="camera_error_5">The system-wide limit on the number of open cameras or camera resources has been reached, and no more cameras can be opened.</string>
     <string name="camera_error_6">The camera is unavailable due to the Notification Manager policy. Some Android 9 devices cannot access the camera when the device is in Do Not Disturb mode. The camera will not be available until the Do Not Disturb mode is disabled.</string>
     <string name="permission_camera_rationale">We need to access your camera for scanning QR-codes. Please grant access.</string>
+    <string name="retry">Retry</string>
     <string name="copy">Copy</string>
     <string name="open">Open</string>
 

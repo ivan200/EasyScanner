@@ -1,6 +1,8 @@
 package com.ivan200.easyscanner.analyzer
 
+import android.graphics.Bitmap
 import android.graphics.ImageFormat
+import android.graphics.Matrix
 import android.graphics.Point
 import android.graphics.PointF
 import android.graphics.Rect
@@ -31,9 +33,22 @@ import com.ivan200.easyscanner.views.BoxView
 class QRcodeAnalyzerML : ImageAnalysis.Analyzer {
 
     var outputTransform: OutputTransform? = null
+    val previewSize = Point(0, 0)
+
+    fun updatePreviewSize(width: Int, height: Int) {
+        previewSize.x = width
+        previewSize.y = height
+    }
 
     private val _result = SingleLiveEvent<ScanResult>()
     val result: LiveData<ScanResult> = _result
+
+    var paused = false
+
+    fun reset() {
+        (_result.value as? ScanResult.Success)?.analyzedBitmap?.recycle()
+        paused = false
+    }
 
     private val scanner: BarcodeScanner by lazy {
         val options = BarcodeScannerOptions.Builder()
@@ -49,29 +64,25 @@ class QRcodeAnalyzerML : ImageAnalysis.Analyzer {
     @androidx.camera.core.ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image
-        if (mediaImage == null || pendingTask?.isComplete == false || imageProxy.format != ImageFormat.YUV_420_888) {
+        if (paused || mediaImage == null || pendingTask?.isComplete == false || imageProxy.format != ImageFormat.YUV_420_888) {
             imageProxy.close()
             return
         }
-        val transform = getTransform(imageProxy)
 
-        val fullBox = imageProxy.run {
-            if (setOf(0, 180).contains(imageInfo.rotationDegrees)) Rect(0, 0, width, height) else Rect(0, 0, height, width)
-        }
-        val previewBounds = fullBox.toRectF().transform(transform)
-        val reticleBox = BoxView.getBarcodeReticleBox(previewBounds.width().toInt(), previewBounds.height().toInt())
+        val transformFromPreviewToProxy = getTransform(imageProxy, false)
+        val previewReticle = BoxView.getBarcodeReticleBox(previewSize.x, previewSize.y)
+        val proxyReticle = previewReticle.transform(transformFromPreviewToProxy)
+        val transformFromProxyToPreview = getTransform(imageProxy, true)
 
         val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
         pendingTask = scanner.process(image)
             .addOnSuccessListener { barcodes ->
                 val codes = mutableListOf<BarCode>()
                 for (barcode in barcodes) {
-                    val box = barcode.boundingBox?.toRectF()?.transform(transform)
-                    if (box == null || reticleBox.contains(box)) {
+                    if (barcode.boundingBox == null || proxyReticle.contains(barcode.boundingBox!!.toRectF())) {
                         codes.add(
                             BarCode(
-                                points = barcode.cornerPoints?.transform(transform) ?: emptyList(),
-                                bounds = box?.transform(transform) ?: RectF(),
+                                points = barcode.cornerPoints?.transform(transformFromProxyToPreview) ?: emptyList(),
                                 text = barcode.rawValue.orEmpty(),
                                 data = barcode.rawBytes?.toList().orEmpty()
                             )
@@ -80,10 +91,12 @@ class QRcodeAnalyzerML : ImageAnalysis.Analyzer {
                 }
 
                 if (codes.isNotEmpty()) {
-                    _result.postValue(ScanResult.Success(codes))
+                    paused = true
+                    _result.postValue(ScanResult.Success(codes, rotateBitmap(imageProxy.toBitmap(), imageProxy.imageInfo.rotationDegrees)))
                 }
             }
             .addOnFailureListener {
+                paused = true
                 _result.postValue(ScanResult.Error(it))
             }
             .addOnCompleteListener {
@@ -91,13 +104,20 @@ class QRcodeAnalyzerML : ImageAnalysis.Analyzer {
             }
     }
 
+    fun rotateBitmap(source: Bitmap, degrees: Int): Bitmap {
+        if(degrees == 0) return source
+        val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
+        return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true).also { source.recycle() }
+    }
+
+
     /**
      * get transfomation to map imageproxy coordinates to preview coordiates
      *
      * https://developer.android.com/reference/androidx/camera/view/transform/CoordinateTransform
      */
     @TransformExperimental
-    fun getTransform(imageProxy: ImageProxy): CoordinateTransform? {
+    fun getTransform(imageProxy: ImageProxy, toPreview: Boolean): CoordinateTransform? {
         // Dkn why i need to setCropRect, but without i get:
         // java.lang.IllegalStateException: The source transform cannot be inverted
         //   at androidx.core.util.Preconditions.checkState(Preconditions.java:169)
@@ -107,7 +127,7 @@ class QRcodeAnalyzerML : ImageAnalysis.Analyzer {
         val source = ImageProxyTransformFactory().apply {
             isUsingRotationDegrees = true
         }.getOutputTransform(imageProxy)
-        return outputTransform?.let { CoordinateTransform(source, it) }
+        return outputTransform?.let { if(toPreview) CoordinateTransform(source, it) else  CoordinateTransform(it, source) }
     }
 
     @TransformExperimental

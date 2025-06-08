@@ -1,7 +1,6 @@
 package com.ivan200.easyscanner.models
 
 import android.graphics.PointF
-import android.graphics.RectF
 
 /**
  * @author ivan200
@@ -9,7 +8,6 @@ import android.graphics.RectF
  */
 data class BarCode(
     val points: List<PointF>,
-    val bounds: RectF,
     val text: String,
     val data: List<Byte>
 )

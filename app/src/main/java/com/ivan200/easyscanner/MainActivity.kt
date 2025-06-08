@@ -24,6 +24,7 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import com.ivan200.easyscanner.analyzer.QRcodeAnalyzerML
 import com.ivan200.easyscanner.databinding.ActivityMainBinding
@@ -81,11 +82,9 @@ class MainActivity : AppCompatActivity() {
             (getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
                 ?.setPrimaryClip(ClipData.newPlainText(binding.result.text, binding.result.text))
             resetUi()
-            rebindCamera()
         }
         binding.retry.setOnClickListener {
             resetUi()
-            rebindCamera()
         }
         binding.open.setOnClickListener {
             var url = binding.result.text.toString()
@@ -125,6 +124,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.viewFinder.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             analyzer?.outputTransform = binding.viewFinder.outputTransform
+            analyzer?.updatePreviewSize(binding.viewFinder.measuredWidth, binding.viewFinder.measuredHeight)
         }
     }
 
@@ -206,7 +206,9 @@ class MainActivity : AppCompatActivity() {
             setSurfaceProvider(binding.viewFinder.surfaceProvider)
         }
 
-        analyzer = QRcodeAnalyzerML()
+        analyzer = QRcodeAnalyzerML().also {
+            it.updatePreviewSize(binding.viewFinder.measuredWidth, binding.viewFinder.measuredHeight)
+        }
         analysis = ImageAnalysis.Builder().apply {
             setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
             setResolutionSelector(aspectRatioSelector(screenAspectRatio))
@@ -272,17 +274,20 @@ class MainActivity : AppCompatActivity() {
             is ScanResult.Success -> {
                 val text = it.barcodes.joinToString("\n") { it.text }
                 if (text.isNotEmpty()) {
-                    binding.result.visibility = View.VISIBLE
+                    binding.analyzePreview.setImageBitmap(it.analyzedBitmap)
+                    binding.analyzePreview.isVisible = true
+
+                    binding.result.isVisible = true
                     binding.result.text = text
 
-                    binding.buttons.visibility = View.VISIBLE
+                    binding.buttons.isVisible = true
                     if (Patterns.WEB_URL.matcher(text).matches()) {
-                        binding.open.visibility = View.VISIBLE
+                        binding.open.isVisible = true
                     } else{
-                        binding.open.visibility = View.GONE
+                        binding.open.isVisible = false
                     }
-                    pauseFrame()
                 } else {
+                    binding.analyzePreview.isVisible = false
                     binding.result.visibility = View.INVISIBLE
                 }
                 if (it.barcodes.isNotEmpty()) {
@@ -290,11 +295,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    private fun pauseFrame() {
-        scanObserver?.apply { analyzer?.result?.removeObserver(this) }
-        cameraProvider?.unbindAll()
     }
 
     private fun getPreviewSize(): Size {
@@ -316,9 +316,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun resetUi() {
         binding.result.text = null
-        binding.buttons.visibility = View.GONE
-        binding.result.visibility = View.INVISIBLE
+        binding.analyzePreview.isVisible = false
+        binding.buttons.isVisible = false
+        binding.result.isVisible = false
         binding.pointsView.hide()
+        analyzer?.reset()
     }
 
     private fun rebindCamera() {
@@ -353,8 +355,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (resetOnResume) {
-            resetUi()
             rebindCamera()
+            resetUi()
             resetOnResume = false
         }
     }
